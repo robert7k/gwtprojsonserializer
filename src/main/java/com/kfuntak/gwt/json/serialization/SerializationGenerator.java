@@ -318,16 +318,24 @@ public class SerializationGenerator extends Generator {
         writeLn("}");
     }
 
-    private void setValue(final String dest, final JClassType classType, final JField field, final String value) {
+    private void setValue(final String dest, final JClassType classType, final JField field, final String value) throws NotFoundException {
         final String fieldNameForGS = getNameForGS(field.getName());
         final Set<? extends JClassType> classes = classType.getFlattenedSupertypeHierarchy();
         final String setter = "set" + fieldNameForGS;
+        final String getter = "get" + fieldNameForGS;
         for (final JClassType aClass : classes) {
-            final JMethod method = aClass.findMethod(setter, new JType[]{field.getType()});
+            JMethod method = aClass.findMethod(setter, new JType[]{field.getType()});
             if (method != null) {
                 writeLn(dest + ".set" + fieldNameForGS + "(" + value + ");");
                 return;
             }
+        	if (aClass.isAssignableTo(typeOracle.getType("java.util.Collection"))) {
+        		method = aClass.findMethod (getter, new JType[]{field.getType()});
+        		if (method != null) {
+        			writeLn(dest + ".get" + fieldNameForGS + "().addAll(" + value + ");");
+        			return;
+        		}
+        	}
         }
         writeLn(dest + "." + field.getName() + "=" + value + ";");
     }
