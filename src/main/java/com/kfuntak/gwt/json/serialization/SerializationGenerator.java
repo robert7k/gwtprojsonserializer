@@ -664,7 +664,8 @@ public class SerializationGenerator extends Generator {
         writeLn("//Serialize Map");
         final JParameterizedType parameterizedType = (JParameterizedType) fieldClassType;
         final JClassType keyParm = parameterizedType.getTypeArgs()[0];
-        if(!keyParm.getQualifiedSourceName().equals("java.lang.String")) {
+        final String keyParamName = keyParm.getQualifiedSourceName();
+		if(!keyParamName.equals("java.lang.String") && !keyParamName.equals("java.lang.Long")) {
             throw new UnableToCompleteException();
         }
         JClassType valueParm = parameterizedType.getTypeArgs()[1];

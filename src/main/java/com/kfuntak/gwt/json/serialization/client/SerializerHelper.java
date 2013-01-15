@@ -28,16 +28,16 @@ public class SerializerHelper {
         return result;
     }
 
-    public static JSONValue getMap(final Map<String, ?> map, final SerializationCallback cb) {
+    public static JSONValue getMap(final Map<?, ?> map, final SerializationCallback cb) {
         if (map == null) {
             return JSONNull.getInstance();
         }
 
         final JSONObject result = new JSONObject();
-        for (final Map.Entry<String, ?> entry : map.entrySet()) {
+        for (final Map.Entry<?, ?> entry : map.entrySet()) {
             if (entry.getKey() != null) {
                 final JSONValue value = cb.serialize(entry.getValue());
-                result.put(entry.getKey(), value);
+                result.put(entry.getKey().toString(), value);
             }
         }
         return result;
