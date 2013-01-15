@@ -1,26 +1,29 @@
 package com.kfuntak.gwt.json.serialization.client;
 
-import com.google.gwt.json.client.*;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.google.gwt.json.client.JSONArray;
+import com.google.gwt.json.client.JSONException;
+import com.google.gwt.json.client.JSONValue;
+
 public class ArrayListSerializer extends AbstractObjectSerializer {
     String elementClassName = null;
-    public ArrayListSerializer(String className) {
+    public ArrayListSerializer(final String className) {
         elementClassName = className;
     }
 
     public ArrayListSerializer() {}
 
-    public JSONValue serializeToJson(Object pojo) {
+    @Override
+	public JSONValue serializeToJson(final Object pojo) {
         if(!(pojo instanceof Collection)){
             throw new IllegalArgumentException();
         }
-        Collection list = (Collection)pojo;
-        JSONArray jsonList = new JSONArray();
+        final Collection<?> list = (Collection<?>)pojo;
+        final JSONArray jsonList = new JSONArray();
         int index = 0;
-        for (Object item : list) {
+        for (final Object item : list) {
             jsonList.set(index++, SerializerHelper.getValue(item));
         }
 
@@ -28,14 +31,14 @@ public class ArrayListSerializer extends AbstractObjectSerializer {
     }
 
     @Override
-    public Object deSerialize(JSONValue jsonValue, String className) throws JSONException {
-        JSONArray jsonArray = jsonValue.isArray();
+    public Object deSerialize(final JSONValue jsonValue, final String className) throws JSONException {
+        final JSONArray jsonArray = jsonValue.isArray();
         if (jsonArray == null) {
             throw new IllegalArgumentException("Json value was not an array");
         }
-        ArrayList<Object> list = new ArrayList<Object>();
+        final ArrayList<Object> list = new ArrayList<Object>();
         for (int i = 0; i < jsonArray.size(); i++) {
-            JSONValue value = jsonArray.get(i);
+            final JSONValue value = jsonArray.get(i);
             if(elementClassName != null) {
                 list.add(DeserializerHelper.getObject(value, className));
             } else {
@@ -46,7 +49,8 @@ public class ArrayListSerializer extends AbstractObjectSerializer {
         return list;
     }
 
-    public Object deSerialize(JSONValue jsonValue) throws JSONException {
+    @Override
+	public Object deSerialize(final JSONValue jsonValue) throws JSONException {
         return deSerialize(jsonValue, elementClassName);
     }
 }

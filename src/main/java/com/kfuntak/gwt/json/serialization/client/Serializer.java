@@ -5,26 +5,26 @@ import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.json.client.JSONException;
+import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONValue;
-import com.google.gwt.json.client.JSONObject;
 
 public class Serializer {
 
-    private static Map SERIALIZABLE_TYPES;
+    private static Map<String, ObjectSerializer> SERIALIZABLE_TYPES;
 
-    private static Map serializableTypes() {
+    private static Map<String, ObjectSerializer> serializableTypes() {
         if (SERIALIZABLE_TYPES == null) {
-            SERIALIZABLE_TYPES = new HashMap();
+            SERIALIZABLE_TYPES = new HashMap<String, ObjectSerializer>();
         }
         return SERIALIZABLE_TYPES;
     }
 
-    protected void addObjectSerializer(String name, ObjectSerializer obj) {
+    protected void addObjectSerializer(final String name, final ObjectSerializer obj) {
         serializableTypes().put(name, obj);
     }
 
-    protected ObjectSerializer getObjectSerializer(String name) {
+    protected ObjectSerializer getObjectSerializer(final String name) {
         if (name.equals("java.util.ArrayList")) {
             return new ArrayListSerializer();
         } else if (name.equals("java.util.HashMap")) {
@@ -32,14 +32,14 @@ public class Serializer {
         }
 
         if(serializableTypes().containsKey(name)){
-            return (ObjectSerializer) serializableTypes().get(name);
+            return serializableTypes().get(name);
         } else {
             throw new SerializationException("Can't find object serializer for " + name);
         }
     }
 
-    private String extractClassName(JSONValue jsonValue) {
-        JSONObject obj = jsonValue.isObject();
+    private String extractClassName(final JSONValue jsonValue) {
+        final JSONObject obj = jsonValue.isObject();
         if (obj != null) {
             if (obj.containsKey("class") && obj.get("class").isString() != null) {
                 return obj.get("class").isString().stringValue();
@@ -51,21 +51,21 @@ public class Serializer {
     protected Serializer() {
     }
 
-    public String serialize(Object pojo) {
+    public String serialize(final Object pojo) {
         return serializeToJson(pojo).toString();
     }
 
-    public JSONValue serializeToJson(Object pojo) {
+    public JSONValue serializeToJson(final Object pojo) {
         if (pojo == null) {
             return null;
         }
 
-        String name = pojo.getClass().getName();
+        final String name = pojo.getClass().getName();
         return getObjectSerializer(name).serializeToJson(pojo);
     }
 
-    public Object deSerialize(JSONValue jsonValue, String className) throws JSONException {
-        String serializeClassName = extractClassName(jsonValue);
+    public Object deSerialize(final JSONValue jsonValue, String className) throws JSONException {
+        final String serializeClassName = extractClassName(jsonValue);
         if(serializeClassName != null && !serializeClassName.equals(className)){
             className = serializeClassName;
         }
@@ -77,50 +77,51 @@ public class Serializer {
         return getObjectSerializer(className).deSerialize(jsonValue);
     }
 
-    public Object deSerialize(String jsonString, String className) throws JSONException {
-        JSONValue jsonValue = JSONParser.parseLenient(jsonString);
+    public Object deSerialize(final String jsonString, final String className) throws JSONException {
+        final JSONValue jsonValue = JSONParser.parseLenient(jsonString);
         return deSerialize(jsonValue, className);
     }
 
-    public Object deSerializeArray(String jsonString, String className) throws JSONException {
-        JSONValue jsonValue = JSONParser.parseLenient(jsonString);
+    public Object deSerializeArray(final String jsonString, final String className) throws JSONException {
+        final JSONValue jsonValue = JSONParser.parseLenient(jsonString);
         return new ArrayListSerializer(className).deSerialize(jsonValue);
     }
 
-    public Object deSerializeArray(JSONValue jsonValue, String className) throws JSONException {
+    public Object deSerializeArray(final JSONValue jsonValue, final String className) throws JSONException {
         return new ArrayListSerializer(className).deSerialize(jsonValue);
     }
 
-    public Object deSerializeMap(String jsonString, String className) throws JSONException {
-        JSONValue jsonValue = JSONParser.parseLenient(jsonString);
+    public Object deSerializeMap(final String jsonString, final String className) throws JSONException {
+        final JSONValue jsonValue = JSONParser.parseLenient(jsonString);
         return new HashMapSerializer(className).deSerialize(jsonValue);
     }
 
-    public Object deSerializeMap(JSONValue jsonValue, String className) throws JSONException {
+    public Object deSerializeMap(final JSONValue jsonValue, final String className) throws JSONException {
         return new HashMapSerializer(className).deSerialize(jsonValue);
     }
 
 
-    public Object deSerialize(String jsonString) {
+    public Object deSerialize(final String jsonString) {
         return deSerialize(jsonString, null);
     }
 
-    public Object deSerialize(JSONValue jsonValue) throws JSONException {
+    public Object deSerialize(final JSONValue jsonValue) throws JSONException {
         return deSerialize(jsonValue, null);
     }
 
-    public static <T> T marshall(String data, String typeString) {
+    public static <T> T marshall(final String data, final String typeString) {
         return marshall(data, typeString, null);
     }
 
-    public static <T> T marshall(String data) {
+    public static <T> T marshall(final String data) {
         return marshall(data, null, null);
     }
 
-    public static <T> T marshall(String data, String typeString, T defaultValue) {
+    public static <T> T marshall(final String data, final String typeString, final T defaultValue) {
         if(GWT.isClient() && data != null && !data.isEmpty()){
-            Serializer serializer = new Serializer();
-            T object = (T)serializer.deSerialize(data, typeString);
+            final Serializer serializer = new Serializer();
+            @SuppressWarnings("unchecked")
+			final T object = (T)serializer.deSerialize(data, typeString);
             if (object == null) {
                 return defaultValue;
             } else {
@@ -131,19 +132,19 @@ public class Serializer {
         return defaultValue;
     }
 
-    public static <T> T marshall(String data, T defaultValue) {
+    public static <T> T marshall(final String data, final T defaultValue) {
 		return marshall(data, null, defaultValue);
     }
 
-    public static String marshall(Object object, String defaultValue) {
+    public static String marshall(final Object object, final String defaultValue) {
         if (GWT.isClient() && object != null) {
-            Serializer serializer = new Serializer();
+            final Serializer serializer = new Serializer();
             return serializer.serialize(object);
         }
         return defaultValue;
     }
 
-    public static String marshall(Object object) {
+    public static String marshall(final Object object) {
         return marshall(object, "");
     }
 }
